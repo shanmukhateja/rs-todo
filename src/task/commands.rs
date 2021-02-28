@@ -1,6 +1,8 @@
-use std::{fs::{File, OpenOptions}, io::{Error, Read, Write}, path::Path, process::exit};
+use std::{io::{Error, Read}, process::exit};
 
-use crate::{TodoItem, TodoList};
+use crate::util::io::{write_tasks_to_file, open_tasks_file};
+
+use crate::task::todo::{TodoItem, TodoList};
 
 pub fn add_new_task(todo: TodoItem) {
     let mut tasks: TodoList = get_all_tasks();
@@ -13,7 +15,7 @@ pub fn add_new_task(todo: TodoItem) {
     }
     tasks.list.push(todo);
 
-    write_to_file(tasks);
+    write_tasks_to_file(tasks);
 }
 
 pub fn mark_as_finished<'a>(task_id: u8) -> Result<&'a str, Error> {
@@ -32,7 +34,7 @@ pub fn mark_as_finished<'a>(task_id: u8) -> Result<&'a str, Error> {
     tasks.list.remove(index);
     // add item in same index
     tasks.list.insert(index, todo);
-    write_to_file(tasks);
+    write_tasks_to_file(tasks);
     Ok("")
 }
 
@@ -40,7 +42,7 @@ pub fn delete_task(task_id: u8) {
     let mut tasks = get_all_tasks();
     let index= tasks.list.iter().position(|e| e.id == task_id).expect("Unable to locate Task");
     tasks.list.remove(index);
-    write_to_file(tasks);
+    write_tasks_to_file(tasks);
 }
 
 pub fn get_all_tasks() -> TodoList {
@@ -58,39 +60,5 @@ pub fn get_all_tasks() -> TodoList {
             println!("{}", err);
             exit(-1)
         }
-    }
-}
-
-fn write_to_file(todo_list: TodoList) {
-    // re-serialize it to string
-    let out = serde_json::to_string(&todo_list).unwrap();
-    // println!("{}", out);
-
-    // write to disk
-    let out_file_pointer = open_tasks_file(true);
-    match out_file_pointer {
-        Ok(mut out_file) => {
-            out_file.write_all(&out.into_bytes()).expect("Unable to write to disk.")
-        }
-        Err(err) => {
-            println!("{}", err);
-            println!("Unable to write to tasks.json");
-        }
-    }
-}
-
-fn open_tasks_file(write_only: bool) -> Result<File, Error> {
-    let file_path = Path::new("./data/tasks.json");
-    if write_only {
-        OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(file_path)
-        } else {
-        OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(file_path)
     }
 }

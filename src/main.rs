@@ -1,48 +1,10 @@
-use std::{env, io::stdin, process::exit};
+use std::{env, process::exit};
 
-mod data;
-use data::{add_new_task, delete_task, get_all_tasks, mark_as_finished};
+use task::{commands::{add_new_task, delete_task, get_all_tasks, mark_as_finished}, todo::TodoItem};
+use util::cli::{show_usage_and_exit, read_user_input};
 
-use serde_derive::{Serialize, Deserialize};
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TodoItem {
-    id: u8,
-    name: String,
-    completed: char
-}
-
-impl TodoItem {
-    fn new(name: String) -> TodoItem {
-        return  TodoItem {
-            id: rand::random(),
-            name: name.trim().to_string(),
-            completed: ' '
-        };
-    }
-
-    fn duplicate(t: &TodoItem) -> TodoItem {
-        return TodoItem {
-            id: t.id,
-            name: t.name.clone(),
-            completed: t.completed
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-
-pub struct TodoList {
-    list: Vec<TodoItem>
-}
-
-impl TodoList {
-    fn new() -> TodoList {
-        TodoList {
-            list: vec![]
-        }
-    }
-}
+mod task;
+mod util;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -104,16 +66,4 @@ fn run(command: &str) {
             show_usage_and_exit();
         }
     }
-}
-
-fn read_user_input(input_msg: &str) -> String {
-    println!("{}", input_msg);
-    let mut buf = String::new();
-    let _ = stdin().read_line(&mut buf);
-    return buf.trim().to_string();
-}
-
-fn show_usage_and_exit() {
-    println!("Usage: rs-todo list|add|finished <args>");
-    exit(-1);
 }
